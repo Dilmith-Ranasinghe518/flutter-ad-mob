@@ -6,9 +6,11 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 class FlutterAdMobManager {
   static InterstitialAd? _interstitialAd;
   static RewardedAd? _rewardedAd;
+  static AppOpenAd? _appOpenAd;
 
   static bool _isInterstitialAdLoading = false;
   static bool _isRewardedAdLoading = false;
+  static bool _isAppOpenAdLoading = false;
 
   /// Call this in `main()` before `runApp()`
   /// ensuring `WidgetsFlutterBinding.ensureInitialized()` has been called.
@@ -126,5 +128,58 @@ class FlutterAdMobManager {
       debugPrint('FlutterAdMobManager: User earned reward: ${reward.amount}');
       onUserEarnedReward(reward);
     });
+  }
+
+  /// Load an App Open Ad.
+  /// Call this when the app starts or is resumed.
+  static void loadAppOpenAd({required String adUnitId}) {
+    if (_isAppOpenAdLoading || _appOpenAd != null) return;
+    _isAppOpenAdLoading = true;
+
+    AppOpenAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: AppOpenAdLoadCallback(
+        onAdLoaded: (ad) {
+          _appOpenAd = ad;
+          _isAppOpenAdLoading = false;
+          debugPrint('FlutterAdMobManager: AppOpenAd loaded.');
+        },
+        onAdFailedToLoad: (error) {
+          _isAppOpenAdLoading = false;
+          _appOpenAd = null;
+          debugPrint('FlutterAdMobManager: AppOpenAd failed to load: $error');
+        },
+      ),
+    );
+  }
+
+  /// Show the loaded App Open Ad.
+  /// Typically called when the app life cycle state changes to resumed.
+  /// Takes an optional callback [onAdDismissed].
+  static void showAppOpenAd({void Function()? onAdDismissed}) {
+    if (_appOpenAd == null) {
+      debugPrint('FlutterAdMobManager: Attempt to show App Open ad before it was loaded.');
+      onAdDismissed?.call();
+      return;
+    }
+
+    _appOpenAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (ad) => debugPrint('FlutterAdMobManager: AppOpenAd showed.'),
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _appOpenAd = null;
+        debugPrint('FlutterAdMobManager: AppOpenAd dismissed.');
+        onAdDismissed?.call();
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        ad.dispose();
+        _appOpenAd = null;
+        debugPrint('FlutterAdMobManager: AppOpenAd failed to show: $error');
+        onAdDismissed?.call();
+      },
+    );
+
+    _appOpenAd!.show();
   }
 }

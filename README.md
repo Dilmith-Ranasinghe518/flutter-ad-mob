@@ -104,3 +104,19 @@ FlutterAdMobManager.showRewardedAd(
   },
 );
 ```
+
+### 5. App Open Ads
+Load them ahead of time (e.g., when the app launches):
+```dart
+// Load
+FlutterAdMobManager.loadAppOpenAd(
+  adUnitId: 'ca-app-pub-3940256099942544/9257395921', // Test App Open ID
+);
+
+// Show (e.g., in AppLifecycleState.resumed event)
+FlutterAdMobManager.showAppOpenAd(
+  onAdDismissed: () {
+    print("App Open ad dismissed. Proceed to app usage.");
+  },
+);
+```
