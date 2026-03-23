@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'ad_manager.dart';
 
 /// A ready-to-use Flutter widget to display a generic Banner Ad.
 /// Simply instantiate it with your `adUnitId`.
@@ -30,8 +31,16 @@ class _AdMobBannerState extends State<AdMobBanner> {
   }
 
   void _loadAd() {
+    final effectiveId = FlutterAdMobManager.getEffectiveAdUnitId(
+      widget.adUnitId, 
+      'ca-app-pub-3940256099942544/6300978111', 
+      'ca-app-pub-3940256099942544/2934735716',
+    );
+
+    if (effectiveId == null) return;
+
     _bannerAd = BannerAd(
-      adUnitId: widget.adUnitId,
+      adUnitId: effectiveId,
       size: widget.adSize,
       request: const AdRequest(),
       listener: BannerAdListener(

@@ -47,24 +47,36 @@ Update your `ios/Runner/Info.plist` with your AdMob App ID:
 
 ## Usage
 
-### 1. Initialization
-In your `main.dart`, initialize the SDK before calling `runApp`:
+### 1. Initialization and Environment Mode
+In your `main.dart`, initialize the SDK before calling `runApp`. You can precisely control when ads are shown using the `AdEnvironment` enum:
+
+- `AdEnvironment.enable`: Shows real/live ads using the IDs you provide.
+- `AdEnvironment.disable`: Disables ads completely (won't load or show).
+- `AdEnvironment.hybrid` **(Default)**: Shows live ads in release mode, and perfectly falls back to Google's standard Test Ad IDs when debugging!
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_ad_mob/flutter_ad_mob.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterAdMobManager.initialize();
+  
+  // Set your AdEnvironment here!
+  await FlutterAdMobManager.initialize(
+    environment: AdEnvironment.hybrid, 
+  );
+  
   runApp(const MyApp());
 }
 ```
+
+Since the library intelligently falls back to Test Ads using `AdEnvironment.hybrid`, you should simply pass your **Live Ad Unit IDs** everywhere in your app, and forget about the boilerplate logic.
 
 ### 2. Banner Ads
 Use the `AdMobBanner` widget anywhere in your widget tree:
 ```dart
 AdMobBanner(
-  adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner ID
+  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Banner ID
   adSize: AdSize.banner, // Optional: defaults to standard banner
   placeholderWidget: const SizedBox.shrink(), // Shown before the ad loads
 )
@@ -75,7 +87,7 @@ Load the ad before showing it (e.g., in `initState` or before a transition):
 ```dart
 // Load
 FlutterAdMobManager.loadInterstitialAd(
-  adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test Interstitial ID
+  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Interstitial ID
 );
 
 // Show later
@@ -91,7 +103,7 @@ Like Interstitial ads, load them ahead of time:
 ```dart
 // Load
 FlutterAdMobManager.loadRewardedAd(
-  adUnitId: 'ca-app-pub-3940256099942544/5224354917', // Test Rewarded ID
+  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Rewarded ID
 );
 
 // Show later
@@ -110,7 +122,7 @@ Load them ahead of time (e.g., when the app launches):
 ```dart
 // Load
 FlutterAdMobManager.loadAppOpenAd(
-  adUnitId: 'ca-app-pub-3940256099942544/9257395921', // Test App Open ID
+  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE App Open ID
 );
 
 // Show (e.g., in AppLifecycleState.resumed event)

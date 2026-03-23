@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'ad_environment.dart';
 
 /// A simple singleton-like manager for Google Mobile Ads
 /// to easily load and show Interstitial and Rewarded ads.
@@ -8,24 +10,46 @@ class FlutterAdMobManager {
   static RewardedAd? _rewardedAd;
   static AppOpenAd? _appOpenAd;
 
+  static AdEnvironment _environment = AdEnvironment.hybrid;
+  static AdEnvironment get environment => _environment;
+
   static bool _isInterstitialAdLoading = false;
   static bool _isRewardedAdLoading = false;
   static bool _isAppOpenAdLoading = false;
 
   /// Call this in `main()` before `runApp()`
   /// ensuring `WidgetsFlutterBinding.ensureInitialized()` has been called.
-  static Future<void> initialize() async {
-    await MobileAds.instance.initialize();
+  static Future<void> initialize({AdEnvironment environment = AdEnvironment.hybrid}) async {
+    _environment = environment;
+    if (_environment != AdEnvironment.disable) {
+      await MobileAds.instance.initialize();
+    }
+  }
+
+  /// Helper to determine which Ad Unit ID to use based on the environment.
+  static String? getEffectiveAdUnitId(String providedAdUnitId, String testAndroidId, String testIosId) {
+    if (_environment == AdEnvironment.disable) return null;
+    if (_environment == AdEnvironment.enable) return providedAdUnitId;
+    // AdEnvironment.hybrid
+    return kReleaseMode ? providedAdUnitId : (Platform.isAndroid ? testAndroidId : testIosId);
   }
 
   /// Load an Interstitial Ad.
   /// Call this ahead of time (e.g. `initState` or right after previous ad completes)
   static void loadInterstitialAd({required String adUnitId}) {
     if (_isInterstitialAdLoading || _interstitialAd != null) return;
+    
+    final effectiveId = getEffectiveAdUnitId(
+      adUnitId, 
+      'ca-app-pub-3940256099942544/1033173712', 
+      'ca-app-pub-3940256099942544/4411468910',
+    );
+    if (effectiveId == null) return;
+
     _isInterstitialAdLoading = true;
 
     InterstitialAd.load(
-      adUnitId: adUnitId,
+      adUnitId: effectiveId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -75,10 +99,18 @@ class FlutterAdMobManager {
   /// Call this ahead of time (e.g. `initState` or right after previous ad completes)
   static void loadRewardedAd({required String adUnitId}) {
     if (_isRewardedAdLoading || _rewardedAd != null) return;
+    
+    final effectiveId = getEffectiveAdUnitId(
+      adUnitId, 
+      'ca-app-pub-3940256099942544/5224354917', 
+      'ca-app-pub-3940256099942544/1712480198',
+    );
+    if (effectiveId == null) return;
+
     _isRewardedAdLoading = true;
 
     RewardedAd.load(
-      adUnitId: adUnitId,
+      adUnitId: effectiveId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
@@ -134,10 +166,18 @@ class FlutterAdMobManager {
   /// Call this when the app starts or is resumed.
   static void loadAppOpenAd({required String adUnitId}) {
     if (_isAppOpenAdLoading || _appOpenAd != null) return;
+    
+    final effectiveId = getEffectiveAdUnitId(
+      adUnitId, 
+      'ca-app-pub-3940256099942544/9257395921', 
+      'ca-app-pub-3940256099942544/5575463023',
+    );
+    if (effectiveId == null) return;
+
     _isAppOpenAdLoading = true;
 
     AppOpenAd.load(
-      adUnitId: adUnitId,
+      adUnitId: effectiveId,
       request: const AdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
