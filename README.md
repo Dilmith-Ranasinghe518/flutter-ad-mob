@@ -14,11 +14,11 @@ dependencies:
   # Otherwise, this package provides it transitively.
   flutter_ad_mob:
     git:
-      url: https://github.com/your-username/flutter-ad-mob.git
+      url: https://github.com/Dilmith-Ranasinghe518/flutter-ad-mob.git
       ref: main
 ```
 
-*(Note: Replace `your-username` with your actual GitHub username, and `flutter-ad-mob` with the repository name you use when pushing this project to GitHub.)*
+*(Note: Make sure to fetch the latest changes if you have other contributors.)*
 
 ## Required App Configuration
 
