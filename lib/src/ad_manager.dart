@@ -67,13 +67,13 @@ class FlutterAdMobManager {
   }
 
   /// Show the loaded Interstitial Ad.
+  /// Returns [true] if the ad was successfully shown, [false] if it wasn't loaded yet.
   /// Takes an optional callback [onAdDismissed] that is triggered when the user 
-  /// closes the ad, or immediately if the ad wasn't loaded.
-  static void showInterstitialAd({void Function()? onAdDismissed}) {
+  /// closes the ad.
+  static bool showInterstitialAd({void Function()? onAdDismissed}) {
     if (_interstitialAd == null) {
       debugPrint('FlutterAdMobManager: Attempt to show interstitial ad before it was loaded.');
-      onAdDismissed?.call();
-      return;
+      return false;
     }
     
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -93,6 +93,7 @@ class FlutterAdMobManager {
     );
     
     _interstitialAd!.show();
+    return true;
   }
 
   /// Load a Rewarded Ad.
@@ -128,16 +129,16 @@ class FlutterAdMobManager {
   }
 
   /// Show the loaded Rewarded Ad.
+  /// Returns [true] if the ad was successfully shown, [false] if it wasn't loaded yet.
   /// [onUserEarnedReward] is called when the user earns the reward.
   /// [onAdDismissed] is called when the ad is closed (optional).
-  static void showRewardedAd({
+  static bool showRewardedAd({
     required void Function(RewardItem reward) onUserEarnedReward,
     void Function()? onAdDismissed,
   }) {
     if (_rewardedAd == null) {
       debugPrint('FlutterAdMobManager: Attempt to show rewarded ad before it was loaded.');
-      onAdDismissed?.call();
-      return;
+      return false;
     }
     
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -160,6 +161,7 @@ class FlutterAdMobManager {
       debugPrint('FlutterAdMobManager: User earned reward: ${reward.amount}');
       onUserEarnedReward(reward);
     });
+    return true;
   }
 
   /// Load an App Open Ad.
@@ -195,13 +197,13 @@ class FlutterAdMobManager {
   }
 
   /// Show the loaded App Open Ad.
+  /// Returns [true] if the ad was successfully shown, [false] if it wasn't loaded yet.
   /// Typically called when the app life cycle state changes to resumed.
   /// Takes an optional callback [onAdDismissed].
-  static void showAppOpenAd({void Function()? onAdDismissed}) {
+  static bool showAppOpenAd({void Function()? onAdDismissed}) {
     if (_appOpenAd == null) {
       debugPrint('FlutterAdMobManager: Attempt to show App Open ad before it was loaded.');
-      onAdDismissed?.call();
-      return;
+      return false;
     }
 
     _appOpenAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -221,5 +223,6 @@ class FlutterAdMobManager {
     );
 
     _appOpenAd!.show();
+    return true;
   }
 }

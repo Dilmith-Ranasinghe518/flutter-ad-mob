@@ -93,19 +93,24 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
           children: [
             ElevatedButton(
               onPressed: () {
-                FlutterAdMobManager.showInterstitialAd(
+                final didShow = FlutterAdMobManager.showInterstitialAd(
                   onAdDismissed: () {
                     // Reload for next time
                     _loadAds();
                   }
                 );
+                if (!didShow) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Interstitial Ad is still loading... please wait!')),
+                  );
+                }
               },
               child: const Text('Show Interstitial Ad'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                FlutterAdMobManager.showRewardedAd(
+                final didShow = FlutterAdMobManager.showRewardedAd(
                   onUserEarnedReward: (reward) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Received ${reward.amount} ${reward.type}')),
@@ -116,13 +121,18 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
                     _loadAds();
                   }
                 );
+                if (!didShow) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Rewarded Ad is still loading a video... please wait!')),
+                  );
+                }
               },
               child: const Text('Show Rewarded Ad'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                FlutterAdMobManager.showAppOpenAd(
+                final didShow = FlutterAdMobManager.showAppOpenAd(
                   onAdDismissed: () {
                     // Preload next app open ad
                     FlutterAdMobManager.loadAppOpenAd(
@@ -132,6 +142,11 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
                     );
                   }
                 );
+                if (!didShow) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('App Open Ad is still loading...')),
+                  );
+                }
               },
               child: const Text('Show App Open Ad (Manual trigger)'),
             ),
