@@ -88,6 +88,10 @@ class FlutterAdMobManager {
   static bool showInterstitialAd({void Function()? onAdDismissed}) {
     if (_interstitialAd == null) {
       debugPrint('FlutterAdMobManager: Attempt to show interstitial ad before it was loaded.');
+      if (!_isInterstitialAdLoading && _interstitialAdUnitId != null) {
+        // Retry loading if it had failed previously!
+        loadInterstitialAd(adUnitId: _interstitialAdUnitId!);
+      }
       return false;
     }
     
@@ -160,6 +164,10 @@ class FlutterAdMobManager {
   }) {
     if (_rewardedAd == null) {
       debugPrint('FlutterAdMobManager: Attempt to show rewarded ad before it was loaded.');
+      if (!_isRewardedAdLoading && _rewardedAdUnitId != null) {
+        // Retry loading if it had failed previously!
+        loadRewardedAd(adUnitId: _rewardedAdUnitId!);
+      }
       return false;
     }
     
@@ -232,6 +240,10 @@ class FlutterAdMobManager {
   static bool showAppOpenAd({void Function()? onAdDismissed}) {
     if (_appOpenAd == null) {
       debugPrint('FlutterAdMobManager: Attempt to show App Open ad before it was loaded.');
+      if (!_isAppOpenAdLoading && _appOpenAdUnitId != null) {
+        // Retry loading if it had failed previously!
+        loadAppOpenAd(adUnitId: _appOpenAdUnitId!);
+      }
       return false;
     }
 
