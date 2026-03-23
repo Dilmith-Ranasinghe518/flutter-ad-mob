@@ -4,13 +4,18 @@ import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterAdMobManager.initialize();
-
-  // Load App Open Ad on launch
-  FlutterAdMobManager.loadAppOpenAd(
-    adUnitId: Platform.isAndroid 
-      ? 'ca-app-pub-3940256099942544/9257395921' 
-      : 'ca-app-pub-3940256099942544/5575463023',
+  // Initialize and automatically start preloading ads!
+  await FlutterAdMobManager.initialize(
+    environment: AdEnvironment.hybrid,
+    interstitialAdUnitId: Platform.isAndroid 
+        ? 'ca-app-pub-3940256099942544/1033173712' 
+        : 'ca-app-pub-3940256099942544/4411468910',
+    rewardedAdUnitId: Platform.isAndroid 
+        ? 'ca-app-pub-3940256099942544/5224354917' 
+        : 'ca-app-pub-3940256099942544/1712480198',
+    appOpenAdUnitId: Platform.isAndroid 
+        ? 'ca-app-pub-3940256099942544/9257395921' 
+        : 'ca-app-pub-3940256099942544/5575463023',
   );
 
   runApp(const MyApp());
@@ -42,35 +47,12 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadAds();
-  }
-
-  void _loadAds() {
-    FlutterAdMobManager.loadInterstitialAd(
-      adUnitId: Platform.isAndroid 
-        ? 'ca-app-pub-3940256099942544/1033173712' 
-        : 'ca-app-pub-3940256099942544/4411468910',
-    );
-    FlutterAdMobManager.loadRewardedAd(
-      adUnitId: Platform.isAndroid 
-        ? 'ca-app-pub-3940256099942544/5224354917' 
-        : 'ca-app-pub-3940256099942544/1712480198',
-    );
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      FlutterAdMobManager.showAppOpenAd(
-        onAdDismissed: () {
-          // Preload next app open ad
-          FlutterAdMobManager.loadAppOpenAd(
-            adUnitId: Platform.isAndroid 
-              ? 'ca-app-pub-3940256099942544/9257395921' 
-              : 'ca-app-pub-3940256099942544/5575463023',
-          );
-        }
-      );
+      FlutterAdMobManager.showAppOpenAd();
     }
   }
 
@@ -93,12 +75,7 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
           children: [
             ElevatedButton(
               onPressed: () {
-                final didShow = FlutterAdMobManager.showInterstitialAd(
-                  onAdDismissed: () {
-                    // Reload for next time
-                    _loadAds();
-                  }
-                );
+                final didShow = FlutterAdMobManager.showInterstitialAd();
                 if (!didShow) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Interstitial Ad is still loading... please wait!')),
@@ -115,10 +92,6 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Received ${reward.amount} ${reward.type}')),
                     );
-                  },
-                  onAdDismissed: () {
-                    // Reload for next time
-                    _loadAds();
                   }
                 );
                 if (!didShow) {
@@ -132,16 +105,7 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                final didShow = FlutterAdMobManager.showAppOpenAd(
-                  onAdDismissed: () {
-                    // Preload next app open ad
-                    FlutterAdMobManager.loadAppOpenAd(
-                      adUnitId: Platform.isAndroid 
-                        ? 'ca-app-pub-3940256099942544/9257395921' 
-                        : 'ca-app-pub-3940256099942544/5575463023',
-                    );
-                  }
-                );
+                final didShow = FlutterAdMobManager.showAppOpenAd();
                 if (!didShow) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('App Open Ad is still loading...')),

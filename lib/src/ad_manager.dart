@@ -13,16 +13,30 @@ class FlutterAdMobManager {
   static AdEnvironment _environment = AdEnvironment.hybrid;
   static AdEnvironment get environment => _environment;
 
+  static String? _interstitialAdUnitId;
+  static String? _rewardedAdUnitId;
+  static String? _appOpenAdUnitId;
+
   static bool _isInterstitialAdLoading = false;
   static bool _isRewardedAdLoading = false;
   static bool _isAppOpenAdLoading = false;
 
   /// Call this in `main()` before `runApp()`
   /// ensuring `WidgetsFlutterBinding.ensureInitialized()` has been called.
-  static Future<void> initialize({AdEnvironment environment = AdEnvironment.hybrid}) async {
+  /// You can provide your Live Ad Unit IDs here to automatically preload and cache them!
+  static Future<void> initialize({
+    AdEnvironment environment = AdEnvironment.hybrid,
+    String? interstitialAdUnitId,
+    String? rewardedAdUnitId,
+    String? appOpenAdUnitId,
+  }) async {
     _environment = environment;
     if (_environment != AdEnvironment.disable) {
       await MobileAds.instance.initialize();
+      
+      if (interstitialAdUnitId != null) loadInterstitialAd(adUnitId: interstitialAdUnitId);
+      if (rewardedAdUnitId != null) loadRewardedAd(adUnitId: rewardedAdUnitId);
+      if (appOpenAdUnitId != null) loadAppOpenAd(adUnitId: appOpenAdUnitId);
     }
   }
 
@@ -35,8 +49,9 @@ class FlutterAdMobManager {
   }
 
   /// Load an Interstitial Ad.
-  /// Call this ahead of time (e.g. `initState` or right after previous ad completes)
+  /// Call this ahead of time. Once loaded and shown, it will automatically reload itself.
   static void loadInterstitialAd({required String adUnitId}) {
+    _interstitialAdUnitId = adUnitId;
     if (_isInterstitialAdLoading || _interstitialAd != null) return;
     
     final effectiveId = getEffectiveAdUnitId(
@@ -83,12 +98,18 @@ class FlutterAdMobManager {
         _interstitialAd = null;
         debugPrint('FlutterAdMobManager: InterstitialAd dismissed.');
         onAdDismissed?.call();
+        if (_interstitialAdUnitId != null) {
+          loadInterstitialAd(adUnitId: _interstitialAdUnitId!);
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _interstitialAd = null;
         debugPrint('FlutterAdMobManager: InterstitialAd failed to show: $error');
         onAdDismissed?.call();
+        if (_interstitialAdUnitId != null) {
+          loadInterstitialAd(adUnitId: _interstitialAdUnitId!);
+        }
       },
     );
     
@@ -97,8 +118,9 @@ class FlutterAdMobManager {
   }
 
   /// Load a Rewarded Ad.
-  /// Call this ahead of time (e.g. `initState` or right after previous ad completes)
+  /// Call this ahead of time. Once loaded and shown, it will automatically reload itself.
   static void loadRewardedAd({required String adUnitId}) {
+    _rewardedAdUnitId = adUnitId;
     if (_isRewardedAdLoading || _rewardedAd != null) return;
     
     final effectiveId = getEffectiveAdUnitId(
@@ -148,12 +170,18 @@ class FlutterAdMobManager {
         _rewardedAd = null;
         debugPrint('FlutterAdMobManager: RewardedAd dismissed.');
         onAdDismissed?.call();
+        if (_rewardedAdUnitId != null) {
+          loadRewardedAd(adUnitId: _rewardedAdUnitId!);
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _rewardedAd = null;
         debugPrint('FlutterAdMobManager: RewardedAd failed to show: $error');
         onAdDismissed?.call();
+        if (_rewardedAdUnitId != null) {
+          loadRewardedAd(adUnitId: _rewardedAdUnitId!);
+        }
       },
     );
     
@@ -165,8 +193,9 @@ class FlutterAdMobManager {
   }
 
   /// Load an App Open Ad.
-  /// Call this when the app starts or is resumed.
+  /// Call this when the app starts. Once loaded and shown, it will automatically reload itself.
   static void loadAppOpenAd({required String adUnitId}) {
+    _appOpenAdUnitId = adUnitId;
     if (_isAppOpenAdLoading || _appOpenAd != null) return;
     
     final effectiveId = getEffectiveAdUnitId(
@@ -213,12 +242,18 @@ class FlutterAdMobManager {
         _appOpenAd = null;
         debugPrint('FlutterAdMobManager: AppOpenAd dismissed.');
         onAdDismissed?.call();
+        if (_appOpenAdUnitId != null) {
+          loadAppOpenAd(adUnitId: _appOpenAdUnitId!);
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _appOpenAd = null;
         debugPrint('FlutterAdMobManager: AppOpenAd failed to show: $error');
         onAdDismissed?.call();
+        if (_appOpenAdUnitId != null) {
+          loadAppOpenAd(adUnitId: _appOpenAdUnitId!);
+        }
       },
     );
 

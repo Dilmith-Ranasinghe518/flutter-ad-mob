@@ -54,6 +54,8 @@ In your `main.dart`, initialize the SDK before calling `runApp`. You can precise
 - `AdEnvironment.disable`: Disables ads completely (won't load or show).
 - `AdEnvironment.hybrid` **(Default)**: Shows live ads in release mode, and perfectly falls back to Google's standard Test Ad IDs when debugging!
 
+*🔥 **Smart Auto-Preloading:** By providing your Ad Unit IDs during initialization, the package automatically pre-caches ads in the background. Once an ad is shown and dismissed, it intelligently prepares the next one without any code!*
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_ad_mob/flutter_ad_mob.dart';
@@ -61,9 +63,12 @@ import 'package:flutter_ad_mob/flutter_ad_mob.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Set your AdEnvironment here!
+  // Set your AdEnvironment here and seamlessly preload your ads!
   await FlutterAdMobManager.initialize(
     environment: AdEnvironment.hybrid, 
+    interstitialAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Interstitial ID
+    rewardedAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',     // Your LIVE Rewarded ID
+    appOpenAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',      // Your LIVE App Open ID
   );
   
   runApp(const MyApp());
@@ -83,52 +88,31 @@ AdMobBanner(
 ```
 
 ### 3. Interstitial Ads
-Load the ad before showing it (e.g., in `initState` or before a transition):
+Because of **Smart Auto-Preloading**, you don't need to manually load ads! Just call `show` anywhere:
 ```dart
-// Load
-FlutterAdMobManager.loadInterstitialAd(
-  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Interstitial ID
-);
-
-// Show later
-FlutterAdMobManager.showInterstitialAd(
-  onAdDismissed: () {
-    print("Ad dismissed. Move to next screen!");
-  },
-);
+bool didShow = FlutterAdMobManager.showInterstitialAd();
+if (!didShow) {
+  print("Ad is still loading in the background. Please wait!");
+}
 ```
 
 ### 4. Rewarded Ads
-Like Interstitial ads, load them ahead of time:
 ```dart
-// Load
-FlutterAdMobManager.loadRewardedAd(
-  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Rewarded ID
-);
-
-// Show later
-FlutterAdMobManager.showRewardedAd(
+bool didShow = FlutterAdMobManager.showRewardedAd(
   onUserEarnedReward: (RewardItem reward) {
     print("User earned ${reward.amount} of ${reward.type}");
   },
-  onAdDismissed: () {
-    print("Rewarded ad dismissed.");
-  },
 );
+if (!didShow) {
+  print("Rewarded video is still downloading... Please wait!");
+}
 ```
 
 ### 5. App Open Ads
-Load them ahead of time (e.g., when the app launches):
 ```dart
-// Load
-FlutterAdMobManager.loadAppOpenAd(
-  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE App Open ID
-);
-
 // Show (e.g., in AppLifecycleState.resumed event)
-FlutterAdMobManager.showAppOpenAd(
-  onAdDismissed: () {
-    print("App Open ad dismissed. Proceed to app usage.");
-  },
-);
+bool didShow = FlutterAdMobManager.showAppOpenAd();
+if (!didShow) {
+  print("App Open ad is still loading!");
+}
 ```
