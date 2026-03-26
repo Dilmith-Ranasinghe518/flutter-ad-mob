@@ -13,6 +13,9 @@ void main() async {
     rewardedAdUnitId: Platform.isAndroid 
         ? 'ca-app-pub-3940256099942544/5224354917' 
         : 'ca-app-pub-3940256099942544/1712480198',
+    rewardedInterstitialAdUnitId: Platform.isAndroid 
+        ? 'ca-app-pub-3940256099942544/5354046379' 
+        : 'ca-app-pub-3940256099942544/6978759866',
     appOpenAdUnitId: Platform.isAndroid 
         ? 'ca-app-pub-3940256099942544/9257395921' 
         : 'ca-app-pub-3940256099942544/5575463023',
@@ -105,6 +108,23 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
+                final didShow = FlutterAdMobManager.showRewardedInterstitialAd(
+                  onUserEarnedReward: (reward) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Rewarded Interstitial: Received ${reward.amount} ${reward.type}')),
+                    );
+                  }
+                );
+                if (!didShow) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Rewarded Interstitial Ad is still loading...')),
+                  );
+                }
+              },
+              child: const Text('Show Rewarded Interstitial Ad'),
+            ),
+            ElevatedButton(
+              onPressed: () {
                 final didShow = FlutterAdMobManager.showAppOpenAd();
                 if (!didShow) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -113,6 +133,22 @@ class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver
                 }
               },
               child: const Text('Show App Open Ad (Manual trigger)'),
+            ),
+            const SizedBox(height: 30),
+            const Text('Native Ad (Small):'),
+            AdMobNative(
+              adUnitId: Platform.isAndroid 
+                ? 'ca-app-pub-3940256099942544/2247696110' 
+                : 'ca-app-pub-3940256099942544/3986624511',
+              templateType: TemplateType.small,
+            ),
+            const SizedBox(height: 30),
+            const Text('Native Ad (Medium):'),
+            AdMobNative(
+              adUnitId: Platform.isAndroid 
+                ? 'ca-app-pub-3940256099942544/2247696110' 
+                : 'ca-app-pub-3940256099942544/3986624511',
+              templateType: TemplateType.medium,
             ),
           ],
         ),

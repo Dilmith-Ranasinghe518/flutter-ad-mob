@@ -66,9 +66,10 @@ void main() async {
   // Set your AdEnvironment here and seamlessly preload your ads!
   await FlutterAdMobManager.initialize(
     environment: AdEnvironment.hybrid, 
-    interstitialAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Interstitial ID
-    rewardedAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',     // Your LIVE Rewarded ID
-    appOpenAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',      // Your LIVE App Open ID
+    interstitialAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',        // Your LIVE Interstitial ID
+    rewardedAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',            // Your LIVE Rewarded ID
+    rewardedInterstitialAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Rewarded Interstitial ID
+    appOpenAdUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy',             // Your LIVE App Open ID
   );
   
   runApp(const MyApp());
@@ -108,7 +109,29 @@ if (!didShow) {
 }
 ```
 
-### 5. App Open Ads
+### 5. Rewarded Interstitial Ads
+These are similar to Rewarded ads but can be shown more seamlessly.
+```dart
+bool didShow = FlutterAdMobManager.showRewardedInterstitialAd(
+  onUserEarnedReward: (RewardItem reward) {
+    print("User earned ${reward.amount} of ${reward.type}");
+  },
+);
+if (!didShow) {
+  print("Rewarded Interstitial ad is still loading!");
+}
+```
+
+### 6. Native Ads (Small & Medium)
+Native ads match the look and feel of your app. Use the `AdMobNative` widget:
+```dart
+AdMobNative(
+  adUnitId: 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy', // Your LIVE Native ID
+  templateType: TemplateType.small, // Or TemplateType.medium
+)
+```
+
+### 7. App Open Ads
 ```dart
 // Show (e.g., in AppLifecycleState.resumed event)
 bool didShow = FlutterAdMobManager.showAppOpenAd();

@@ -8,6 +8,7 @@ import 'ad_environment.dart';
 class FlutterAdMobManager {
   static InterstitialAd? _interstitialAd;
   static RewardedAd? _rewardedAd;
+  static RewardedInterstitialAd? _rewardedInterstitialAd;
   static AppOpenAd? _appOpenAd;
 
   static AdEnvironment _environment = AdEnvironment.hybrid;
@@ -15,10 +16,12 @@ class FlutterAdMobManager {
 
   static String? _interstitialAdUnitId;
   static String? _rewardedAdUnitId;
+  static String? _rewardedInterstitialAdUnitId;
   static String? _appOpenAdUnitId;
 
   static bool _isInterstitialAdLoading = false;
   static bool _isRewardedAdLoading = false;
+  static bool _isRewardedInterstitialAdLoading = false;
   static bool _isAppOpenAdLoading = false;
 
   /// Call this in `main()` before `runApp()`
@@ -28,6 +31,7 @@ class FlutterAdMobManager {
     AdEnvironment environment = AdEnvironment.hybrid,
     String? interstitialAdUnitId,
     String? rewardedAdUnitId,
+    String? rewardedInterstitialAdUnitId,
     String? appOpenAdUnitId,
   }) async {
     _environment = environment;
@@ -36,6 +40,7 @@ class FlutterAdMobManager {
       
       if (interstitialAdUnitId != null) loadInterstitialAd(adUnitId: interstitialAdUnitId);
       if (rewardedAdUnitId != null) loadRewardedAd(adUnitId: rewardedAdUnitId);
+      if (rewardedInterstitialAdUnitId != null) loadRewardedInterstitialAd(adUnitId: rewardedInterstitialAdUnitId);
       if (appOpenAdUnitId != null) loadAppOpenAd(adUnitId: appOpenAdUnitId);
     }
   }
@@ -194,6 +199,83 @@ class FlutterAdMobManager {
     );
     
     _rewardedAd!.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+      debugPrint('FlutterAdMobManager: User earned reward: ${reward.amount}');
+      onUserEarnedReward(reward);
+    });
+    return true;
+  }
+
+  /// Load a Rewarded Interstitial Ad.
+  /// Call this ahead of time. Once loaded and shown, it will automatically reload itself.
+  static void loadRewardedInterstitialAd({required String adUnitId}) {
+    _rewardedInterstitialAdUnitId = adUnitId;
+    if (_isRewardedInterstitialAdLoading || _rewardedInterstitialAd != null) return;
+    
+    final effectiveId = getEffectiveAdUnitId(
+      adUnitId, 
+      'ca-app-pub-3940256099942544/5354046379', 
+      'ca-app-pub-3940256099942544/6978759866',
+    );
+    if (effectiveId == null) return;
+
+    _isRewardedInterstitialAdLoading = true;
+    RewardedInterstitialAd.load(
+      adUnitId: effectiveId,
+      request: const AdRequest(),
+      rewardedInterstitialAdLoadCallback: RewardedInterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedInterstitialAd = ad;
+          _isRewardedInterstitialAdLoading = false;
+          debugPrint('FlutterAdMobManager: RewardedInterstitialAd loaded.');
+        },
+        onAdFailedToLoad: (error) {
+          _isRewardedInterstitialAdLoading = false;
+          _rewardedInterstitialAd = null;
+          debugPrint('FlutterAdMobManager: RewardedInterstitialAd failed to load: $error');
+        },
+      ),
+    );
+  }
+
+  /// Show the loaded Rewarded Interstitial Ad.
+  /// Returns [true] if the ad was successfully shown, [false] if it wasn't loaded yet.
+  /// [onUserEarnedReward] is called when the user earns the reward.
+  /// [onAdDismissed] is called when the ad is closed (optional).
+  static bool showRewardedInterstitialAd({
+    required void Function(RewardItem reward) onUserEarnedReward,
+    void Function()? onAdDismissed,
+  }) {
+    if (_rewardedInterstitialAd == null) {
+      debugPrint('FlutterAdMobManager: Attempt to show rewarded interstitial ad before it was loaded.');
+      if (!_isRewardedInterstitialAdLoading && _rewardedInterstitialAdUnitId != null) {
+        // Retry loading if it had failed previously!
+        loadRewardedInterstitialAd(adUnitId: _rewardedInterstitialAdUnitId!);
+      }
+      return false;
+    }
+    
+    _rewardedInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _rewardedInterstitialAd = null;
+        debugPrint('FlutterAdMobManager: RewardedInterstitialAd dismissed.');
+        onAdDismissed?.call();
+        if (_rewardedInterstitialAdUnitId != null) {
+          loadRewardedInterstitialAd(adUnitId: _rewardedInterstitialAdUnitId!);
+        }
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        ad.dispose();
+        _rewardedInterstitialAd = null;
+        debugPrint('FlutterAdMobManager: RewardedInterstitialAd failed to show: $error');
+        onAdDismissed?.call();
+        if (_rewardedInterstitialAdUnitId != null) {
+          loadRewardedInterstitialAd(adUnitId: _rewardedInterstitialAdUnitId!);
+        }
+      },
+    );
+    
+    _rewardedInterstitialAd!.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
       debugPrint('FlutterAdMobManager: User earned reward: ${reward.amount}');
       onUserEarnedReward(reward);
     });
