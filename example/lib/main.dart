@@ -32,7 +32,71 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'AdMob Package Test',
-      home: AdTestScreen(),
+      home: SplashScreen(),
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() async {
+    // Wait for 3 seconds to let ads load.
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+    
+    // Show the App Open Ad.
+    final didShow = FlutterAdMobManager.showAppOpenAd(
+      onAdDismissed: () {
+        // Navigate to the next screen after the ad is dismissed.
+        if (mounted) {
+          Navigator.pushReplacement(
+            context, 
+            MaterialPageRoute(builder: (context) => const AdTestScreen())
+          );
+        }
+      }
+    );
+
+    // If the ad doesn't show (e.g. not loaded), navigate anyway.
+    if (!didShow) {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (context) => const AdTestScreen())
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.rocket_launch, size: 80, color: Colors.blueAccent),
+            SizedBox(height: 20),
+            Text('Flutter AdMob Loading...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -44,26 +108,7 @@ class AdTestScreen extends StatefulWidget {
   State<AdTestScreen> createState() => _AdTestScreenState();
 }
 
-class _AdTestScreenState extends State<AdTestScreen> with WidgetsBindingObserver {
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      FlutterAdMobManager.showAppOpenAd();
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
+class _AdTestScreenState extends State<AdTestScreen> { // Removed WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {

@@ -23,6 +23,11 @@ class FlutterAdMobManager {
   static bool _isRewardedAdLoading = false;
   static bool _isRewardedInterstitialAdLoading = false;
   static bool _isAppOpenAdLoading = false;
+  static bool _isShowingAd = false;
+  static DateTime? _lastAdDismissedTimestamp;
+
+  /// Returns [true] if any full-screen ad is currently being displayed.
+  static bool get isShowingAd => _isShowingAd;
 
   /// Call this in `main()` before `runApp()`
   /// ensuring `WidgetsFlutterBinding.ensureInitialized()` has been called.
@@ -101,10 +106,15 @@ class FlutterAdMobManager {
     }
     
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (ad) => debugPrint('FlutterAdMobManager: InterstitialAd showed.'),
+      onAdShowedFullScreenContent: (ad) {
+        _isShowingAd = true;
+        debugPrint('FlutterAdMobManager: InterstitialAd showed.');
+      },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         _interstitialAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: InterstitialAd dismissed.');
         onAdDismissed?.call();
         if (_interstitialAdUnitId != null) {
@@ -114,6 +124,8 @@ class FlutterAdMobManager {
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _interstitialAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: InterstitialAd failed to show: $error');
         onAdDismissed?.call();
         if (_interstitialAdUnitId != null) {
@@ -177,10 +189,15 @@ class FlutterAdMobManager {
     }
     
     _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (ad) => debugPrint('FlutterAdMobManager: RewardedAd showed.'),
+      onAdShowedFullScreenContent: (ad) {
+        _isShowingAd = true;
+        debugPrint('FlutterAdMobManager: RewardedAd showed.');
+      },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         _rewardedAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: RewardedAd dismissed.');
         onAdDismissed?.call();
         if (_rewardedAdUnitId != null) {
@@ -190,6 +207,8 @@ class FlutterAdMobManager {
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _rewardedAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: RewardedAd failed to show: $error');
         onAdDismissed?.call();
         if (_rewardedAdUnitId != null) {
@@ -255,9 +274,15 @@ class FlutterAdMobManager {
     }
     
     _rewardedInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (ad) {
+        _isShowingAd = true;
+        debugPrint('FlutterAdMobManager: RewardedInterstitialAd showed.');
+      },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         _rewardedInterstitialAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: RewardedInterstitialAd dismissed.');
         onAdDismissed?.call();
         if (_rewardedInterstitialAdUnitId != null) {
@@ -267,6 +292,8 @@ class FlutterAdMobManager {
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _rewardedInterstitialAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: RewardedInterstitialAd failed to show: $error');
         onAdDismissed?.call();
         if (_rewardedInterstitialAdUnitId != null) {
@@ -329,11 +356,22 @@ class FlutterAdMobManager {
       return false;
     }
 
+    // Don't show if another ad is currently showing or was just dismissed (cooldown)
+    if (_isShowingAd || (_lastAdDismissedTimestamp != null && DateTime.now().difference(_lastAdDismissedTimestamp!) < const Duration(seconds: 1))) {
+      debugPrint('FlutterAdMobManager: AppOpenAd skipped because another ad is active or recently dismissed.');
+      return false;
+    }
+
     _appOpenAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdShowedFullScreenContent: (ad) => debugPrint('FlutterAdMobManager: AppOpenAd showed.'),
+      onAdShowedFullScreenContent: (ad) {
+        _isShowingAd = true;
+        debugPrint('FlutterAdMobManager: AppOpenAd showed.');
+      },
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         _appOpenAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: AppOpenAd dismissed.');
         onAdDismissed?.call();
         if (_appOpenAdUnitId != null) {
@@ -343,6 +381,8 @@ class FlutterAdMobManager {
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _appOpenAd = null;
+        _isShowingAd = false;
+        _lastAdDismissedTimestamp = DateTime.now();
         debugPrint('FlutterAdMobManager: AppOpenAd failed to show: $error');
         onAdDismissed?.call();
         if (_appOpenAdUnitId != null) {
